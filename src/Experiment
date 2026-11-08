@@ -1,0 +1,81 @@
+
+/**
+ * Creates an Experiment object for project 3:Knapsack Problem. 
+ * Each experiment has an order number, a name, its weight in kilograms
+ * and a value rating. 
+ * 
+ * Team Name: Team 1
+ * Team Members: Moriancumer Hurtado (primary author), 
+ * 				 Jacob Gorham, 
+ * 				 Mubarak Alrashdi,
+ * 				Luis Agramonte Peralta
+ * Course: CS 2430-502, Fall 2026
+ * Project: Programming Project 3
+ */
+public class Experiment {
+	private int order;
+	private String experimentName;
+	private double weightKg;
+	private int rating;
+	
+
+	/**
+	 * Constructs a new Experiment with an order number, 
+	 * name, its weight in kilograms and a value rating 
+	 * 
+	 * @param order				the order number of the experiment as an int. 
+	 * @param experimentName	the name of the experiment as a String.
+	 * @param weightKg			the weight of the experiment in kilograms as a double.
+	 * @param rating			the rating of the experiment as an int.
+	 */
+	public Experiment(int order, String experimentName, double weightKg, int rating) {
+		this.order = order;
+		this.experimentName = experimentName;
+		this.weightKg = weightKg;
+		this.rating = rating; 	
+	}
+
+	public int getOrder() {
+		return order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
+	public String getExperimentName() {
+		return experimentName;
+	}
+
+	public void setExperimentName(String experimentName) {
+		this.experimentName = experimentName;
+	}
+
+	public double getWeightKg() {
+		return weightKg;
+	}
+
+	public void setWeightKg(double weightKg) {
+		this.weightKg = weightKg;
+	}
+
+	public int getRating() {
+		return rating;
+	}
+
+	public void setRating(int rating) {
+		this.rating = rating;
+	}
+	
+	/**
+	 * Returns a string of the following format:
+	 * Experiment {order}: {experimentName}           ({weightKg}, {rating}) 
+	 * 
+	 */
+	@Override
+	public String toString() {
+		return String.format("Experiment #%d: %-30s (Weight: %.1f, Rating: %d)", 
+				order, experimentName, weightKg, rating);
+	}
+	
+}
