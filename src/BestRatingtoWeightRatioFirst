@@ -1,0 +1,66 @@
+
+import java.util.Arrays;
+/** 
+ * Implements the Best Rating-to-Weight Ratio First greedy strategy.
+ * This class sorts the experiments in descending order based on their score 
+ * (rating divided by weight) and selects items sequentially until 
+ * the weight limit is reached. 
+ * 
+ * Team Name: Team 1
+ * Team Members: Moriancumer Hurtado (primary author), 
+ * 				 Jacob Gorham, 
+ * 				 Mubarak Alrashdi,
+ * 				 Luis Agramonte Peralta
+ * Course: CS 2430-502, Fall 2026
+ * Project: Programming Project 3
+ * 
+ */
+public class BestRatingtoWeightRatioFirst {
+	
+	/**
+	 * Executes the greedy selection process based on the highest rating-to-weight ratio.
+	 * Sorts the provided array by comparing an experiment's score (rating divided by weight)
+	 * to each other and selects scores that would allow for the highest rating within 
+	 * the weight limit, and prints a report with the selected experiments 
+	 * as well as their weight, rating, and score. 
+	 * 
+	 * @param experiments		an array of Experiment objects to evaluate and sort 
+	 * @param weightLimit		weight limit of the payload as a double 
+	 */
+public static void use(Experiment[] experiments, double weightLimit) {
+		
+		Arrays.sort(experiments, (a, b) -> {
+			double scoreA = (double) a.getRating() / a.getWeightKg();
+            double scoreB = (double) b.getRating() / b.getWeightKg();
+            
+            return Double.compare(scoreA, scoreB);
+        });
+
+		
+		double currentWeightKg = 0;
+		int totalRating = 0;
+		
+		System.out.println();
+		System.out.println("Best Rating-to-Weight Ratio First's Chosen Experiments");
+		System.out.println();
+		
+		for(Experiment e : experiments) {
+			if (currentWeightKg + e.getWeightKg() <= weightLimit) {
+				currentWeightKg += e.getWeightKg();
+				totalRating += e.getRating();
+				
+				double score = (double) e.getRating() / e.getWeightKg();
+				
+				System.out.printf("- %-26s (Weight: %.1f kg, Rating: %d, Ratio: %.4f)%n", 
+                        e.getExperimentName(), e.getWeightKg(), e.getRating(), score);
+			}
+		}
+		
+		System.out.println();
+		System.out.println("Total Weight: " + currentWeightKg + " kg / " + weightLimit + " kg");
+		System.out.println("Total Rating: " + totalRating);
+		System.out.println();
+			
+	}
+
+}
