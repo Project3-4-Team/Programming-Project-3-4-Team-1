@@ -1,0 +1,77 @@
+
+/**
+ * Test Driver for Programming Project 3 (Knapsack Problem).
+ * This class initializes a set of 12 unique experiments, 
+ * adds them to an array, and tests three greedy strategies
+ * as well as a brute-force exhaustive search—to find    
+ * a combination of unique experiments that has 
+ * the highest overall rating without exceeding 
+ * a specific weight limit.  
+ * 
+ * Team Name: Team 1
+ * Team Members: Moriancumer Hurtado, 
+ * 				 Jacob Gorham, 
+ * 				 Mubarak Alrashdi,
+ * 				 Luis Agramonte Peralta
+ * Course: CS 2430-502, Fall 2026
+ * Project: Programming Project 3
+ *
+ * 
+ */
+public class Main {
+
+	public static void main(String[] args) {
+		
+		
+		// use the Experiment class to add all 12 experiment
+		// than puts them in an Experiment array called experiments
+		// than prints out the Experiments 
+		
+		Experiment cloudPatterns = new Experiment(1, "Cloud Patterns", 36, 5);
+		Experiment solarFlares = new Experiment(2, "Solar Flares", 264, 9);
+		Experiment solarPower = new Experiment(3, "Solar Power", 188, 6);
+		Experiment binaryStars = new Experiment(4, "Binary Stars", 203, 8);
+		Experiment relativity = new Experiment(5, "Relativity", 104, 8);
+		Experiment seedViability = new Experiment(6, "Seed Viability", 7, 4);
+		Experiment sunSpots = new Experiment(7, "Sun Spots", 90, 2);
+		Experiment miceTumors = new Experiment(8, "Mice Tumors", 65, 8);
+		Experiment microgravityPlantGrowth = new Experiment(9, "Microgravity Plant Growth", 75, 5);
+		Experiment micrometeorites = new Experiment(10, "Micrometeorites", 170, 9);
+		Experiment cosmicRays = new Experiment(11, "Cosmic Rays", 80, 7);
+		Experiment yeastFermentation = new Experiment(12, "Yeast Fermentation", 27, 4);
+		
+		Experiment[] experiments = {cloudPatterns, solarFlares, solarPower,
+									binaryStars, relativity, seedViability,
+									sunSpots, miceTumors, microgravityPlantGrowth,
+									micrometeorites, cosmicRays, yeastFermentation		
+		};
+		
+		for (Experiment exp : experiments) {
+		    System.out.println(exp);
+		}
+		
+		System.out.println();
+		
+		// Part 1 – Implement Three Greedy Strategies
+		
+		double weightLimit = 700;
+		
+		// Highest Rating First 
+		
+		
+		// Lightest First
+		
+		
+		// Best Rating-to-Weight Ratio First 
+		System.out.println("\n------------------------------------------------");
+		BestRatingtoWeightRatioFirst.use(experiments, weightLimit);
+		System.out.println("\n------------------------------------------------");
+		
+		
+		// Part 2 – Brute Force / Exhaustive Search
+		
+		// Project 3: Change Order
+
+	}
+
+}
