@@ -33,7 +33,7 @@ public static void use(Experiment[] experiments, double weightLimit) {
 			double scoreA = (double) a.getRating() / a.getWeightKg();
             double scoreB = (double) b.getRating() / b.getWeightKg();
             
-            return Double.compare(scoreA, scoreB);
+            return Double.compare(scoreB, scoreA);
         });
 
 		
