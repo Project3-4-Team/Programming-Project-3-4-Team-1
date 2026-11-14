@@ -1,4 +1,3 @@
-
 import java.util.Arrays;
 /** 
  * Implements the Best Rating-to-Weight Ratio First greedy strategy.
@@ -18,48 +17,87 @@ import java.util.Arrays;
 public class BestRatingtoWeightRatioFirst {
 	
 	/**
-	 * Executes the greedy selection process based on the highest rating-to-weight ratio.
-	 * Sorts the provided array by comparing an experiment's score (rating divided by weight)
-	 * to each other and selects scores that would allow for the highest rating within 
-	 * the weight limit, and prints a report with the selected experiments 
-	 * as well as their weight, rating, and score. 
+	 * Executes the Best Rating-to-Weight Ratio First greedy selection strategy.
+	 * Sorts a copy of the provided array in descending order by floating-point ratio
+	 * ({@code rating / weightKg}), breaking ties by descending rating, and selects experiments
+	 * that fit within the weight limit before printing a formatted report.
 	 * 
-	 * @param experiments		an array of Experiment objects to evaluate and sort 
-	 * @param weightLimit		weight limit of the payload as a double 
+	 * @param experiments	an array of Experiment objects to evaluate and sort
+	 * @param weightLimit	weight limit in kilograms
 	 */
-public static void use(Experiment[] experiments, double weightLimit) {
+	public static void use(Experiment[] experiments, double weightLimit) {		
+			RevisedRules.validateInputs(experiments, weightLimit);
 		
-		Arrays.sort(experiments, (a, b) -> {
+			Experiment[] sorted = experiments.clone();
+		
+			Arrays.sort(sorted, (a, b) -> {
+				double scoreA = (double) a.getRating() / a.getWeightKg();
+	            double scoreB = (double) b.getRating() / b.getWeightKg();
+	            
+	            int ratioComparison = Double.compare(scoreB, scoreA);
+				return (ratioComparison != 0) ? ratioComparison : 
+					Integer.compare(b.getRating(), a.getRating());
+	        });
+	
+			
+			double currentWeightKg = 0;
+			int totalRating = 0;
+			
+			System.out.println();
+			System.out.println("Best Rating-to-Weight Ratio First's Chosen Experiments");
+			System.out.println();
+			
+			for(Experiment e : sorted) {
+				if (currentWeightKg + e.getWeightKg() <= weightLimit) {
+					currentWeightKg += e.getWeightKg();
+					totalRating += e.getRating();
+					
+					double score = (double) e.getRating() / e.getWeightKg();
+					
+					System.out.printf("- %-26s (Weight: %.1f kg, Rating: %d, Ratio: %.4f)%n", 
+	                        e.getExperimentName(), e.getWeightKg(), e.getRating(), score);
+				}
+			}
+			
+			System.out.println();
+			System.out.printf("Total Weight: %.1f kg / %.1f kg%n", currentWeightKg, weightLimit);
+			System.out.println("Total Rating: " + totalRating);
+			System.out.println();
+				
+		}
+	
+	// Order Change (helper class)
+	
+	/**
+	 * Executes the Best Rating-to-Weight Ratio First greedy strategy under the Week 3 revised rules.
+	 * Ranking Rule: Computes each experiment's floating-point ratio (rating / weightKg)
+	 * and sorts in descending order, breaking identical ratio ties by descending rating.
+	 * Each tentative addition is evaluated by RevisedRules using adjusted mass and prerequisite rules.
+	 *
+	 * @param experiments 		an array of Experiment objects to evaluate and sort
+	 * @param weightLimit 		weight limit in kilograms
+	 */
+	public static void revisedRuleUse(Experiment[] experiments, double weightLimit) {
+		RevisedRules.validateInputs(experiments, weightLimit);
+		
+		Experiment[] sorted = experiments.clone();
+	
+		Arrays.sort(sorted, (a, b) -> {
 			double scoreA = (double) a.getRating() / a.getWeightKg();
             double scoreB = (double) b.getRating() / b.getWeightKg();
             
-            return Double.compare(scoreB, scoreA);
+            int ratioComparison = Double.compare(scoreB, scoreA);
+			return (ratioComparison != 0) ? ratioComparison : 
+				Integer.compare(b.getRating(), a.getRating());
         });
 
-		
-		double currentWeightKg = 0;
-		int totalRating = 0;
-		
-		System.out.println();
-		System.out.println("Best Rating-to-Weight Ratio First's Chosen Experiments");
-		System.out.println();
-		
-		for(Experiment e : experiments) {
-			if (currentWeightKg + e.getWeightKg() <= weightLimit) {
-				currentWeightKg += e.getWeightKg();
-				totalRating += e.getRating();
-				
-				double score = (double) e.getRating() / e.getWeightKg();
-				
-				System.out.printf("- %-26s (Weight: %.1f kg, Rating: %d, Ratio: %.4f)%n", 
-                        e.getExperimentName(), e.getWeightKg(), e.getRating(), score);
-			}
+		RevisedRules newRules = new RevisedRules(weightLimit);
+		for (Experiment e: sorted) {
+			newRules.revisedUse(e);
 		}
 		
-		System.out.println();
-		System.out.println("Total Weight: " + currentWeightKg + " kg / " + weightLimit + " kg");
-		System.out.println("Total Rating: " + totalRating);
-		System.out.println();
+		
+		newRules.printReport("Best Rating-to-Weight Ratio First's Chosen Experiments", true);
 			
 	}
 
