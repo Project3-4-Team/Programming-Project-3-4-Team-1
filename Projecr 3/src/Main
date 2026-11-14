@@ -1,4 +1,3 @@
-
 /**
  * Test Driver for Programming Project 3 (Knapsack Problem).
  * This class initializes a set of 12 unique experiments, 
@@ -27,18 +26,18 @@ public class Main {
 		// than puts them in an Experiment array called experiments
 		// than prints out the Experiments 
 		
-		Experiment cloudPatterns = new Experiment(1, "Cloud Patterns", 36, 5);
-		Experiment solarFlares = new Experiment(2, "Solar Flares", 264, 9);
-		Experiment solarPower = new Experiment(3, "Solar Power", 188, 6);
-		Experiment binaryStars = new Experiment(4, "Binary Stars", 203, 8);
-		Experiment relativity = new Experiment(5, "Relativity", 104, 8);
-		Experiment seedViability = new Experiment(6, "Seed Viability", 7, 4);
-		Experiment sunSpots = new Experiment(7, "Sun Spots", 90, 2);
-		Experiment miceTumors = new Experiment(8, "Mice Tumors", 65, 8);
-		Experiment microgravityPlantGrowth = new Experiment(9, "Microgravity Plant Growth", 75, 5);
-		Experiment micrometeorites = new Experiment(10, "Micrometeorites", 170, 9);
-		Experiment cosmicRays = new Experiment(11, "Cosmic Rays", 80, 7);
-		Experiment yeastFermentation = new Experiment(12, "Yeast Fermentation", 27, 4);
+		Experiment cloudPatterns = new Experiment("1", "Cloud Patterns", 36, 5); 
+		Experiment solarFlares = new Experiment("2", "Solar Flares", 264, 9);
+		Experiment solarPower = new Experiment("3", "Solar Power", 188, 6);
+		Experiment binaryStars = new Experiment("4", "Binary Stars", 203, 8);
+		Experiment relativity = new Experiment("5", "Relativity", 104, 8);
+		Experiment seedViability = new Experiment("6", "Seed Viability", 7, 4);
+		Experiment sunSpots = new Experiment("7", "Sun Spots", 90, 2);
+		Experiment miceTumors = new Experiment("8", "Mice Tumors", 65, 8);
+		Experiment microgravityPlantGrowth = new Experiment("9", "Microgravity Plant Growth", 75, 5);
+		Experiment micrometeorites = new Experiment("10", "Micrometeorites", 170, 9);
+		Experiment cosmicRays = new Experiment("11", "Cosmic Rays", 80, 7);
+		Experiment yeastFermentation = new Experiment("12", "Yeast Fermentation", 27, 4);
 		
 		Experiment[] experiments = {cloudPatterns, solarFlares, solarPower,
 									binaryStars, relativity, seedViability,
@@ -58,8 +57,15 @@ public class Main {
 		
 		// Highest Rating First 
 		
+		System.out.println("\n------------------------------------------------");
+		HighestRatingFirst.use(experiments, weightLimit);
+		System.out.println("\n------------------------------------------------");
+		
 		
 		// Lightest First
+		//System.out.println("\n------------------------------------------------");
+		//LightestFirst.use(experiments, weightLimit);
+		//System.out.println("\n------------------------------------------------");
 		
 		
 		// Best Rating-to-Weight Ratio First 
@@ -71,6 +77,41 @@ public class Main {
 		// Part 2 – Brute Force / Exhaustive Search
 		
 		// Project 3: Change Order
+		
+		// Revised Experiments 
+		Experiment rCloudPatterns = new Experiment("1", "Cloud Patterns", 36, 5);
+		Experiment rSolarFlares = new Experiment("2", "Solar Flares", 264, 9);
+		Experiment rSolarPower = new Experiment("3", "Solar Power", 188, 6);
+		Experiment rBinaryStars = new Experiment("4", "Binary Stars", 203, 8);
+		Experiment rRelativity = new Experiment("5", "Relativity", 104, 8);
+		Experiment rSeedViability = new Experiment("6", "Seed Viability", 7, 4);
+		Experiment rSunSpots = new Experiment("7", "Sun Spots", 90, 2);
+		Experiment rMiceTumors = new Experiment("8", "Mice Tumors", 65, 8);
+		Experiment rMicrogravityPlantGrowth = new Experiment("9", "Microgravity Plant Growth", 75, 5);
+		Experiment rMicrometeorites = new Experiment("10", "Micrometeorites", 170, 9);
+		Experiment rCosmicRaysPB = new Experiment("11", "Cosmic Rays", 80, 7);
+		Experiment rCosmicRaysSB = new Experiment("11a", "Cosmic Rays", 10, 5);
+		Experiment rYeastFermentation = new Experiment("12", "Yeast Fermentation", 27, 4);
+		
+		Experiment[] revisedExperiments = {rCloudPatterns, rSolarFlares, rSolarPower,
+										   rBinaryStars,rRelativity, rSeedViability,
+										   rSunSpots, rMiceTumors, rMicrogravityPlantGrowth,
+										   rMicrometeorites, rCosmicRaysPB, rCosmicRaysSB,
+										   rYeastFermentation
+		};
+		
+		System.out.println("\n------------------------------------------------");
+		HighestRatingFirst.revisedRuleUse(revisedExperiments, weightLimit);
+		System.out.println("\n------------------------------------------------");
+		
+		//System.out.println("\n------------------------------------------------");
+		//LightestFirst.revisedRuleUse(revisedExperiments, weightLimit);
+		//System.out.println("\n------------------------------------------------");
+		
+		System.out.println("\n------------------------------------------------");
+		BestRatingtoWeightRatioFirst.revisedRuleUse(revisedExperiments, weightLimit);
+		System.out.println("\n------------------------------------------------");
+		
 
 	}
 
