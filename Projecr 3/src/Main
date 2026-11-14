@@ -75,7 +75,11 @@ public class Main {
 		
 		
 		// Part 2 – Brute Force / Exhaustive Search
+		System.out.println("\n------------------------------------------------");
+		BruteForce.use(experiments, weightLimit);
+		System.out.println("\n------------------------------------------------");
 		
+
 		// Project 3: Change Order
 		
 		// Revised Experiments 
