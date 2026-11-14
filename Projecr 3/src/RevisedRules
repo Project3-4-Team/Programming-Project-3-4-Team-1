@@ -1,0 +1,183 @@
+package knapsackProblem;
+
+import java.util.ArrayList;
+import java.util.List;
+/**
+ * Implements the revised rules from the week 3 order change 
+ * revised rules:
+ * 1. Solar instrument limit (at most 2 of Experiments 2, 3, and 7)
+ * 2. Thermal mass credit (-7.0 kg when both Experiments 6 and 12 are selected)
+ * 3. Experiment 11a prerequisite (11a requires 11 to be selected)
+ * 
+ * Team Name: Team 1
+ * Team Members: Moriancumer Hurtado, 
+ *               Jacob Gorham, 
+ *               Mubarak Alrashdi,
+ *               Luis Agramonte Peralta
+ * Course: CS 2430-502, Fall 2026
+ * Project: Programming Project 3
+ */
+
+public class RevisedRules {
+	private final double weightLimit;
+    private final List<Experiment> chosenExperiments;
+    private double currentWeightKg;
+    private int totalRating;
+    
+    private int solarExperimentCount;
+    private boolean experiment6;
+    private boolean experiment12;
+    private boolean thermalCredit;
+    private boolean experiment11;
+    private Experiment experiment11a;
+    
+    /**
+	 * Validates that the experiment array is non-null, contains no null elements,
+	 * and that the specified weight limit is non-negative.
+	 * 
+	 * @param experiments			the array of Experiment objects to validate
+	 * @param weightLimit			weight limit in kilograms (must be >= 0)
+	 * @throws IllegalArgumentException if experiments is null, contains a null element, or weightLimit is negative
+	 */
+    
+    public static void validateInputs(Experiment[] experiments, double weightLimit) {
+        if (experiments == null) {
+            throw new IllegalArgumentException("Experiments array cannot be null.");
+        }
+        for (int i = 0; i < experiments.length; i++) {
+            if (experiments[i] == null) {
+                throw new IllegalArgumentException("Experiment at index " + i + " cannot be null.");
+            }
+        }
+        if (weightLimit < 0) {
+            throw new IllegalArgumentException("Weight limit cannot be negative: " + weightLimit);
+        }
+    }
+    
+    /**
+	 * Constructs a new RevisedRules tracker with the specified payload weight limit.
+	 * 
+	 * @param weightLimit	the maximum payload weight in kilograms (must be >= 0)
+	 * @throws IllegalArgumentException if weightLimit is negative
+	 */
+    public RevisedRules(double weightLimit) {
+    	if (weightLimit < 0) {
+    	    throw new IllegalArgumentException("Weight limit cannot be negative: " + weightLimit);
+    	}
+		this.weightLimit = weightLimit;
+		this.chosenExperiments = new ArrayList<>();
+		this.currentWeightKg = 0.0;
+		this.totalRating = 0;  	
+    }
+    
+    /**
+	 * Evaluates a candidate experiment against the Week 3 revised rules and adds it
+	 * to the manifest if all constraints and adjusted weight limits are satisfied.
+	 * If Experiment 11a is evaluated before Experiment 11 has been accepted, it is
+	 * cached and automatically re-evaluated if Experiment 11 is later selected.
+	 * 
+	 * @param e		the Experiment to evaluate
+	 * @return		{@code true} if the experiment was immediately added to the manifest;
+	 * 				{@code false} if it was rejected or deferred pending Experiment 11
+	 * @throws IllegalArgumentException if the candidate experiment {@code e} is null
+	 */
+    public boolean revisedUse(Experiment e) {	
+    	if (e == null) {
+    	    throw new IllegalArgumentException("Experiment cannot be null.");
+    	}
+    	
+    	String order = e.getOrder();
+    	
+    	if (order.equalsIgnoreCase("11a") && !experiment11) {
+    		experiment11a = e;
+    		return false;
+    	}
+    	
+    	boolean solarExperiment = order.equals("2") || order.equals("3") || order.equals("7");
+		
+		if (solarExperiment && solarExperimentCount >= 2) {
+			return false;
+		}
+		
+		double thermalCreditWeight = e.getWeightKg();
+		boolean enableCredit = !thermalCredit && 
+		        ((order.equals("6") && experiment12) || (order.equals("12") && experiment6));
+		
+		if (enableCredit) {
+			thermalCreditWeight -= 7.0;
+		}
+		
+		if (currentWeightKg + thermalCreditWeight > weightLimit) {
+			return false;
+		}
+		
+		chosenExperiments.add(e);
+        currentWeightKg += thermalCreditWeight;
+        totalRating += e.getRating();
+        
+        if (solarExperiment) solarExperimentCount++;
+        if (order.equals("6")) experiment6 = true;
+        if (order.equals("12")) experiment12 = true;
+        if (enableCredit) thermalCredit = true;
+        if (order.equals("11")) experiment11 = true;
+        
+        if (order.equals("11") && experiment11a != null) {
+        	Experiment pending = experiment11a;
+        	experiment11a = null;
+        	revisedUse(pending);
+        }
+        
+		return true;
+    }
+    
+    public List<Experiment> getChosenExperiments() {
+        return chosenExperiments;
+    }
+    
+    public double getCurrentWeightKg() {
+        return currentWeightKg;
+    }
+    
+    public int getTotalRating() {
+        return totalRating;
+    }
+    
+    public boolean isThermalCreditApplied() {
+        return thermalCredit;
+    }
+    
+    /**
+	 * Prints a formatted report of all selected experiments under the revised rules,
+	 * noting any applied thermal mass credit along with total weight and total rating.
+	 * 
+	 * @param strategyTitle	the heading title describing the selection strategy used
+	 * @param includeRatio	{@code true} to display each experiment's rating-to-weight ratio;
+	 * 						{@code false} to display only weight and rating
+	 */
+    public void printReport(String strategyTitle, boolean includeRatio) {
+        System.out.println();
+        System.out.println("REVISED RULES");
+        System.out.println(strategyTitle);
+        System.out.println();
+
+        for (Experiment e : chosenExperiments) {
+            if (includeRatio) {
+                double score = (double) e.getRating() / e.getWeightKg();
+                System.out.printf("- %-26s (Weight: %.1f kg, Rating: %d, Ratio: %.4f)%n",
+                        e.getExperimentName(), e.getWeightKg(), e.getRating(), score);
+            } else {
+                System.out.printf("- %-26s (Weight: %.1f kg, Rating: %d)%n",
+                        e.getExperimentName(), e.getWeightKg(), e.getRating());
+            }
+        }
+
+        System.out.println();
+        if (thermalCredit) {
+            System.out.println("Note: 7.0 kg Thermal Mass Credit applied (Experiments 6 & 12).");
+        }
+        System.out.printf("Total Weight: %.1f kg / %.1f kg%n", currentWeightKg, weightLimit);
+        System.out.println("Total Rating: " + totalRating);
+        System.out.println();
+    }
+    
+}
