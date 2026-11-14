@@ -1,8 +1,4 @@
-package P3;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import java.util.Arrays;
 /**
  * Selects experiments for project 3: Knapsack Problem
  * This class uses the highest rating first and will keep adding
@@ -19,74 +15,81 @@ import java.util.List;
  * Project: Programming Project 3
  */
 public class HighestRatingFirst {
-	private List<Experiment> experiments;
-	private double capacityKg;
-
 	
 	/**
-	 * Constructor for HighestRatingFirst including the experiments to pick from
-	 * and the maximum weight we can carry.
+	 * Executes the Highest Rating First greedy selection strategy.
+	 * Sorts a copy of the array in descending order by rating (breaking ties by
+	 * lighter weight first), adds experiments that fit within the weight limit,
+	 * and prints a formatted summary report.
 	 * 
-	 * @param experiments  all the experiments we can pick from
-	 * @param capacityKg   the max weight we can carry (700 kg)
+	 * @param experiments	an array of Experiment objects to evaluate and sort
+	 * @param weightLimit	weight limit in kilograms
 	 */
-	public HighestRatingFirst(List<Experiment> experiments, double capacityKg) {
-		super();
-		this.experiments = experiments;
-		this.capacityKg = capacityKg;
-	}
-	
-	/**
-	 * Goes through the experiments from the highest to lowest rating,
-	 * then it will add each one if it still fits under the weight limit.
-	 * 
-	 * @return   the experiments that got picked
-	 */
-	public List<Experiment> select() {
-        
-		// making a copy so that we do not mes up the original list
-		List<Experiment> sortedList = new ArrayList<>(experiments);
-        
-		//sorting list so that the highest ratings come first
-		sortedList.sort((a, b) -> b.getRating() - a.getRating());
-
-		List<Experiment> payload = new ArrayList<>();
-		double totalWeight = 0;
-        
-		// checks the list and adds whatever can still fit
-		for (Experiment e : sortedList) {
-			if (totalWeight + e.getWeightKg() <= capacityKg) {
-				payload.add(e);
-				totalWeight += e.getWeightKg();
-			}
-
-		}
-
-		return payload;
-	}
-	
-	/**
-	 * Prints out the experiments that got picked with
-	 * the total weight and total rating.
-	 * 
-	 * @param payload
-	 */
-	public void printResult(List<Experiment> payload) {
-		double totalweight = 0;
+	public static void use(Experiment[] experiments, double weightLimit) {
+		RevisedRules.validateInputs(experiments, weightLimit);
+		
+		Experiment[] sorted = experiments.clone();
+		
+		Arrays.sort(sorted, (a, b) -> {
+			int comparison = Integer.compare(b.getRating(), a.getRating());
+			return (comparison != 0) ? comparison : Double.compare(a.getWeightKg(), b.getWeightKg());
+		});
+		
+		double currentWeightKg = 0;
 		int totalRating = 0;
 		
-		System.out.println("--- Highest Rating First ---");
+		System.out.println();
+		System.out.println("Highest Rating First's Chosen Experiments");
+		System.out.println();
 		
-		for(Experiment e: payload) {
-			System.out.println(e);
-			totalweight += e.getWeightKg();
-			totalRating += e.getRating();
+		for(Experiment e : sorted) {
+			if (currentWeightKg + e.getWeightKg() <= weightLimit) {
+				currentWeightKg += e.getWeightKg();
+				totalRating += e.getRating();
+				System.out.printf("- %-26s (Weight: %.1f kg, Rating: %d)%n", 
+                        e.getExperimentName(), e.getWeightKg(), e.getRating());
+			}
 		}
-		System.out.printf("Total Weight: %.1f kg%n", totalweight);
-		
-		System.out.println("Total Rating: " + totalRating);
 		
 		System.out.println();
+		System.out.println("Total Weight: " + currentWeightKg + " kg / " + weightLimit + " kg");
+		System.out.println("Total Rating: " + totalRating);
+		System.out.println();
+			
+	}
+
+	
+	// Order Change (helper class)
+	
+	/**
+	 * Executes the Highest Rating First greedy strategy under the Week 3 revised rules.
+	 * Ranking Rule: Sorts experiments in descending order by rating, breaking ties by
+	 * ascending weight (lighter experiment first). Each tentative addition is evaluated
+	 * by RevisedRules using adjusted mass (accounting for the -7.0 kg thermal credit
+	 * for {6, 12}), the 2-instrument solar cap ({2, 3, 7}), and deferred buffering of
+	 * Experiment 11a until Experiment 11 is selected.
+	 *
+	 * @param experiments 		an array of Experiment objects to evaluate and sort
+	 * @param weightLimit 		weight limit in kilograms
+	 */
+	public static void revisedRuleUse(Experiment[] experiments, double weightLimit) {
+		RevisedRules.validateInputs(experiments, weightLimit);
+		
+		Experiment[] sorted = experiments.clone();
+			
+		Arrays.sort(sorted, (a, b) -> {
+			int cmp = Integer.compare(b.getRating(), a.getRating());
+			return (cmp != 0) ? cmp : Double.compare(a.getWeightKg(), b.getWeightKg());
+		});
+
+		RevisedRules newRules = new RevisedRules(weightLimit);
+		for (Experiment e: sorted) {
+			newRules.revisedUse(e);
+		}
+			
+			
+		newRules.printReport("Highest Rating First's Chosen Experiments", false);
+				
 	}
 
 }
