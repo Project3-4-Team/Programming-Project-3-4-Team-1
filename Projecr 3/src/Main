@@ -45,21 +45,20 @@ public class Main {
 									micrometeorites, cosmicRays, yeastFermentation		
 		};
 		
-		for (Experiment exp : experiments) {
-		    System.out.println(exp);
-		}
+		//for (Experiment exp : experiments) {
+		   // System.out.println(exp);
+		//}
 		
-		System.out.println();
+		//System.out.println();
 		
 		// Part 1 – Implement Three Greedy Strategies
 		
 		double weightLimit = 700;
 		
 		// Highest Rating First 
-		
-		System.out.println("\n------------------------------------------------");
-		HighestRatingFirst.use(experiments, weightLimit);
-		System.out.println("\n------------------------------------------------");
+		//System.out.println("\n------------------------------------------------");
+		//HighestRatingFirst.use(experiments, weightLimit);
+		//System.out.println("\n------------------------------------------------");
 		
 		
 		// Lightest First
@@ -69,17 +68,17 @@ public class Main {
 		
 		
 		// Best Rating-to-Weight Ratio First 
-		System.out.println("\n------------------------------------------------");
-		BestRatingtoWeightRatioFirst.use(experiments, weightLimit);
-		System.out.println("\n------------------------------------------------");
+		//System.out.println("\n------------------------------------------------");
+		//BestRatingtoWeightRatioFirst.use(experiments, weightLimit);
+		//System.out.println("\n------------------------------------------------");
 		
 		
 		// Part 2 – Brute Force / Exhaustive Search
-		System.out.println("\n------------------------------------------------");
-		BruteForce.use(experiments, weightLimit);
-		System.out.println("\n------------------------------------------------");
+		//System.out.println("\n------------------------------------------------");
+		//BruteForce.use(experiments, weightLimit);
+		///System.out.println("\n------------------------------------------------");
 		
-
+		
 		// Project 3: Change Order
 		
 		// Revised Experiments 
@@ -108,15 +107,28 @@ public class Main {
 		HighestRatingFirst.revisedRuleUse(revisedExperiments, weightLimit);
 		System.out.println("\n------------------------------------------------");
 		
-		//System.out.println("\n------------------------------------------------");
-		//LightestFirst.revisedRuleUse(revisedExperiments, weightLimit);
-		//System.out.println("\n------------------------------------------------");
+		System.out.println("\n------------------------------------------------");
+		LightestFirst.revisedRuleUse(revisedExperiments, weightLimit);
+		System.out.println("\n------------------------------------------------");
 		
 		System.out.println("\n------------------------------------------------");
 		BestRatingtoWeightRatioFirst.revisedRuleUse(revisedExperiments, weightLimit);
 		System.out.println("\n------------------------------------------------");
 		
-
+		System.out.println("\n------------------------------------------------");
+		BruteForce.revisedRuleUse(revisedExperiments, weightLimit);
+		System.out.println("\n------------------------------------------------");
+		
+		System.out.println("\n==================== SUMMARY ====================");
+		System.out.println("Optimal Rating (Brute Force): 58 (Weight: 695.0 kg)");
+		System.out.println("Matched Optimal:");
+		System.out.println("  - None");
+		System.out.println("Did Not Match Optimal:");
+		System.out.println("  - Lightest First (Rating: 57, Weight: 657.0 kg)");
+		System.out.println("  - Best Rating-to-Weight Ratio First (Rating: 57, Weight: 657.0 kg)");
+		System.out.println("  - Highest Rating First (Rating: 50, Weight: 700.0 kg)");
+		System.out.println("=================================================");
+		
 	}
 
 }
