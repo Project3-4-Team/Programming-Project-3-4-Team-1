@@ -1,0 +1,629 @@
+
+import static org.junit.jupiter.api.Assertions.*;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+class KnapsackProblemTest {
+	
+	private String captureOutput(Runnable action) {
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(outContent));
+        try {
+            action.run();
+        } finally {
+            System.setOut(originalOut);
+        }
+        return outContent.toString();
+    }
+	
+	// might want to double the amount of test to run both the use method and the revisedRuleUse method 
+	
+	private Experiment[] baseExperiments;
+    private Experiment[] revisedExperiments;
+
+    @BeforeEach
+    void setUp() {
+        baseExperiments = new Experiment[] {
+            new Experiment("1", "Cloud Patterns", 36, 5),
+            new Experiment("2", "Solar Flares", 264, 9),
+            new Experiment("3", "Solar Power", 188, 6),
+            new Experiment("4", "Binary Stars", 203, 8),
+            new Experiment("5", "Relativity", 104, 8),
+            new Experiment("6", "Seed Viability", 7, 4),
+            new Experiment("7", "Sun Spots", 90, 2),
+            new Experiment("8", "Mice Tumors", 65, 8),
+            new Experiment("9", "Microgravity Plant Growth", 75, 5),
+            new Experiment("10", "Micrometeorites", 170, 9),
+            new Experiment("11", "Cosmic Rays", 80, 7),
+            new Experiment("12", "Yeast Fermentation", 27, 4)
+        };
+
+        revisedExperiments = new Experiment[] {
+            new Experiment("1", "Cloud Patterns", 36, 5),
+            new Experiment("2", "Solar Flares", 264, 9),
+            new Experiment("3", "Solar Power", 188, 6),
+            new Experiment("4", "Binary Stars", 203, 8),
+            new Experiment("5", "Relativity", 104, 8),
+            new Experiment("6", "Seed Viability", 7, 4),
+            new Experiment("7", "Sun Spots", 90, 2),
+            new Experiment("8", "Mice Tumors", 65, 8),
+            new Experiment("9", "Microgravity Plant Growth", 75, 5),
+            new Experiment("10", "Micrometeorites", 170, 9),
+            new Experiment("11", "Cosmic Rays", 80, 7),
+            new Experiment("11a", "Cosmic Rays", 10, 5),
+            new Experiment("12", "Yeast Fermentation", 27, 4)
+        };
+    }
+	
+    
+	// Experiment Class: Encapsulation & Exact toString()
+    @Test
+    void testExperimentEncapsulationAndToString() {
+        for (Field field : Experiment.class.getDeclaredFields()) {
+            assertTrue(Modifier.isPrivate(field.getModifiers()),
+                    "Field '" + field.getName() + "' must be private");
+        }
+
+        Experiment TestExperiment = new Experiment("1", "Cloud Patterns", 36.0, 5);
+        String expected = "Experiment #1: Cloud Patterns                 (Weight: 36.0, Rating: 5)";
+        assertEquals(expected, TestExperiment.toString());
+    }
+	
+	@Test
+	void testExperimentToStringExactSpacingAndDecimals() {
+		Experiment experiment = new Experiment("1", "Cloud Patterns", 36.0, 5);
+	    String expected = String.format("Experiment #%s: %-30s (Weight: %.1f, Rating: %d)",
+	                "1", "Cloud Patterns", 36.0, 5);
+	        assertEquals(expected, experiment.toString());
+	        assertEquals("Experiment #1: Cloud Patterns                 (Weight: 36.0, Rating: 5)", experiment.toString());
+	}
+	
+	@Test
+    void testExperimentToStringDecimalRounding() {
+        Experiment experiment = new Experiment("6", "Seed Viability", 7.46, 4);
+        assertTrue(experiment.toString().endsWith("(Weight: 7.5, Rating: 4)"));
+    }
+	
+	// HighestRatingFirst: Descending Rating & Lighter Tie-Breaker
+	
+	@Test
+    void testHighestRatingFirstSortingAndLighterTieBreaker() {
+        Experiment heavyTie = new Experiment("4", "Heavy Star", 200.0, 8);
+        Experiment topRating = new Experiment("10", "Top Meteor", 170.0, 9);
+        Experiment lightTie = new Experiment("8", "Light Mice", 65.0, 8);
+
+        Experiment[] items = { heavyTie, topRating, lightTie };
+
+        String baseOut = captureOutput(() -> HighestRatingFirst.use(items, 240.0));
+        int idxTop = baseOut.indexOf("Top Meteor");
+        int idxLight = baseOut.indexOf("Light Mice");
+
+        assertTrue(idxTop >= 0 && idxLight > idxTop, "Top Meteor (9) must be selected before Light Mice (8)");
+        assertFalse(baseOut.contains("Heavy Star"), "Heavy Star (200 kg) must lose the Rating 8 tie to Light Mice (65 kg)");
+        assertTrue(baseOut.contains("Total Weight: 235.0 kg / 240.0 kg"));
+        assertTrue(baseOut.contains("Total Rating: 17"));
+
+        String revisedOut = captureOutput(() -> HighestRatingFirst.revisedRuleUse(items, 240.0));
+        assertTrue(revisedOut.contains("Top Meteor"));
+        assertTrue(revisedOut.contains("Light Mice"));
+        assertFalse(revisedOut.contains("Heavy Star"));
+        assertTrue(revisedOut.contains("Total Rating: 17"));
+    }
+	
+	
+	// LightestFirst: Ascending Weight & Higher Rating Tie-Breaker
+	@Test
+    void testLightestFirstSortingAndHigherRatingTieBreaker() {
+        Experiment lowRatingTie = new Experiment("1", "Low Tie", 50.0, 3);
+        Experiment highRatingTie = new Experiment("5", "High Tie", 50.0, 9);
+        Experiment lightest = new Experiment("8", "Lightest", 20.0, 2);
+
+        Experiment[] items = { lowRatingTie, highRatingTie, lightest };
+
+        String baseOut = captureOutput(() -> LightestFirst.use(items, 75.0));
+        int idxLightest = baseOut.indexOf("Lightest");
+        int idxHighTie = baseOut.indexOf("High Tie");
+
+        assertTrue(idxLightest >= 0 && idxHighTie > idxLightest, "Lightest (20 kg) must be selected before High Tie (50 kg)");
+        assertFalse(baseOut.contains("Low Tie"), "Low Tie (Rating 3) must lose the 50 kg tie to High Tie (Rating 9)");
+        assertTrue(baseOut.contains("Total Weight: 70.0 kg / 75.0 kg"));
+        assertTrue(baseOut.contains("Total Rating: 11"));
+
+        String revisedOut = captureOutput(() -> LightestFirst.revisedRuleUse(items, 75.0));
+        assertTrue(revisedOut.contains("Lightest"));
+        assertTrue(revisedOut.contains("High Tie"));
+        assertFalse(revisedOut.contains("Low Tie"));
+        assertTrue(revisedOut.contains("Total Rating: 11"));
+    }
+	
+	
+	// BestRatingtoWeightRatioFirst: Double Ratios & Descending Sort
+	@Test
+    void testBestRatioDoubleRatiosAndDescendingSort() {
+        Experiment midRatio = new Experiment("1", "Mid Ratio", 10.0, 5);    // 0.5000
+        Experiment topRatio = new Experiment("4", "Top Ratio", 10.0, 9);    // 0.9000
+        Experiment lowRatio = new Experiment("5", "Low Ratio", 10.0, 1);    // 0.1000
+
+        Experiment[] items = { midRatio, topRatio, lowRatio };
+
+        String baseOut = captureOutput(() -> BestRatingtoWeightRatioFirst.use(items, 25.0));
+        int idxTop = baseOut.indexOf("Top Ratio");
+        int idxMid = baseOut.indexOf("Mid Ratio");
+
+        assertTrue(idxTop >= 0 && idxMid > idxTop, "Top Ratio (0.9000) must be selected before Mid Ratio (0.5000)");
+        assertTrue(baseOut.contains("Ratio: 0.9000"), "Ratio must be computed as a floating-point double");
+        assertTrue(baseOut.contains("Ratio: 0.5000"));
+        assertFalse(baseOut.contains("Low Ratio"), "Low Ratio (0.1000) must be excluded after capacity fills");
+        assertTrue(baseOut.contains("Total Weight: 20.0 kg / 25.0 kg"));
+        assertTrue(baseOut.contains("Total Rating: 14"));
+
+        String revisedOut = captureOutput(() -> BestRatingtoWeightRatioFirst.revisedRuleUse(items, 25.0));
+        assertTrue(revisedOut.contains("Top Ratio"));
+        assertTrue(revisedOut.contains("Mid Ratio"));
+        assertFalse(revisedOut.contains("Low Ratio"));
+        assertTrue(revisedOut.contains("Total Rating: 14"));
+    }
+	
+	
+	@Test
+    void testBestRatioFloatingPointDivisionNotIntegerDivision() {
+        Experiment lowRatio = new Experiment("1", "Lower Ratio", 10.0, 5);
+        Experiment highRatio = new Experiment("2", "Higher Ratio", 10.0, 9);
+
+        Experiment[] ratios = { lowRatio, highRatio };
+
+        String output = captureOutput(() -> BestRatingtoWeightRatioFirst.use(ratios, 15.0));
+        assertTrue(output.contains("Higher Ratio"));
+        assertTrue(output.contains("Ratio: 0.9000"));
+        assertFalse(output.contains("Lower Ratio"));
+        
+        String revisedRuleoutput = captureOutput(() -> BestRatingtoWeightRatioFirst.revisedRuleUse(ratios, 15.0));
+        assertTrue(revisedRuleoutput.contains("Higher Ratio"));
+        assertTrue(revisedRuleoutput.contains("Ratio: 0.9000"));
+        assertFalse(revisedRuleoutput.contains("Lower Ratio"));
+    }
+	
+	@Test
+    void testBestRatioDescendingSortAndSafeCutoff() {
+        Experiment[] testExperiments = {
+            new Experiment("1", "Mid Ratio", 50.0, 10),  
+            new Experiment("2", "Best Ratio", 20.0, 10), 
+            new Experiment("3", "Worst Ratio", 40.0, 4)  
+        };
+
+        String output = captureOutput(() -> BestRatingtoWeightRatioFirst.use(testExperiments, 75.0));
+
+        int idxBest = output.indexOf("Best Ratio");
+        int idxMid = output.indexOf("Mid Ratio");
+
+        assertTrue(idxBest >= 0 && idxMid > idxBest, "Items must be chosen in descending ratio order");
+        
+        assertFalse(output.contains("Worst Ratio"));
+        assertTrue(output.contains("Total Weight: 70.0 kg / 75.0 kg"));
+        assertTrue(output.contains("Total Rating: 20"));
+        
+        String revisedRuleoutput = captureOutput(() -> BestRatingtoWeightRatioFirst.revisedRuleUse(testExperiments, 75.0));
+        assertFalse(revisedRuleoutput.contains("Worst Ratio"));
+        assertTrue(revisedRuleoutput.contains("Total Weight: 70.0 kg / 75.0 kg"));
+        assertTrue(revisedRuleoutput.contains("Total Rating: 20"));
+    }
+	
+	// BruteForce: Optimal Subset Selection
+	
+	@Test
+    void testBruteForceBaseline12Experiments() {
+        String BruteForceOutput = captureOutput(() -> BruteForce.use(baseExperiments, 700.0));
+
+        assertTrue(BruteForceOutput.contains("Subsets checked: 4096"),
+                "Must evaluate all 2^12 = 4,096 binary combinations");
+
+        String rank1Block = BruteForceOutput.substring(BruteForceOutput.indexOf("Rank 1 - OPTIMAL"), BruteForceOutput.indexOf("Rank 2"));
+
+        assertTrue(rank1Block.contains("Total Weight: 692.0 kg / 700.0 kg"));
+        assertTrue(rank1Block.contains("Total Rating: 53"));
+        assertTrue(rank1Block.contains("Binary Stars"));
+        assertTrue(rank1Block.contains("Micrometeorites"));
+    }
+	
+	@Test
+    void testBruteForceRevisedRules13Experiments() {
+        String BruteForceRevisedRulesOutput = captureOutput(() -> BruteForce.revisedRuleUse(revisedExperiments, 700.0));
+
+        assertTrue(BruteForceRevisedRulesOutput.contains("Subsets checked: 8192"),
+                "Must evaluate all 2^13 = 8,192 binary combinations including infeasible candidates");
+
+        String rank1Block = BruteForceRevisedRulesOutput.substring(BruteForceRevisedRulesOutput.indexOf("Rank 1 - OPTIMAL"), BruteForceRevisedRulesOutput.indexOf("Rank 2"));
+
+        assertTrue(rank1Block.contains("7.0 kg Thermal Mass Credit applied"));
+        assertTrue(rank1Block.contains("Total Weight: 695.0 kg / 700.0 kg"));
+        assertTrue(rank1Block.contains("Total Rating: 58"));
+    }
+	
+	
+	@Test
+    void testBruteForceBreaksTiesByLighterWeight() {
+        Experiment heavier = new Experiment("1", "Heavier Tie", 100.0, 10);
+        Experiment lighter = new Experiment("4", "Lighter Tie", 60.0, 10);
+
+        String output = captureOutput(() -> BruteForce.use(new Experiment[] { heavier, lighter }, 120.0));
+        String rank1Block = output.substring(output.indexOf("Rank 1 - OPTIMAL"), output.indexOf("Rank 2"));
+
+        assertTrue(rank1Block.contains("Lighter Tie"));
+        assertFalse(rank1Block.contains("Heavier Tie"));
+        assertTrue(rank1Block.contains("Total Weight: 60.0 kg / 120.0 kg"));
+        assertTrue(rank1Block.contains("Total Rating: 10"));
+    }
+
+	// Edge cases 
+	
+	@Test
+    void testZeroWeightLimitAcrossAllGreedyStrategies() {
+        Experiment[] testExperiments = {
+            new Experiment("1", "Cloud Patterns", 36.0, 5),
+            new Experiment("6", "Seed Viability", 7.0, 4)
+        };
+
+        String testRatioFirst = captureOutput(() -> BestRatingtoWeightRatioFirst.use(testExperiments, 0.0));
+        assertFalse(testRatioFirst.contains("- "), "No experiments should be listed for 0 kg limit");
+        assertTrue(testRatioFirst.contains("Total Weight: 0.0 kg / 0.0 kg"));
+        assertTrue(testRatioFirst.contains("Total Rating: 0"));
+        
+        String revisedRuleTestRatioFirst = captureOutput(() -> BestRatingtoWeightRatioFirst.revisedRuleUse(testExperiments, 0.0));
+        assertFalse(revisedRuleTestRatioFirst.contains("- "), "No experiments should be listed for 0 kg limit");
+        assertTrue(revisedRuleTestRatioFirst.contains("Total Weight: 0.0 kg / 0.0 kg"));
+        assertTrue(revisedRuleTestRatioFirst.contains("Total Rating: 0"));
+
+        String testHighestOut = captureOutput(() -> HighestRatingFirst.use(testExperiments, 0.0));
+        assertFalse(testHighestOut.contains("- "));
+        assertTrue(testHighestOut.contains("Total Weight: 0.0 kg / 0.0 kg"));
+        assertTrue(testHighestOut.contains("Total Rating: 0"));
+        
+        String revisedRuleTestHighestOut = captureOutput(() -> HighestRatingFirst.revisedRuleUse(testExperiments, 0.0));
+        assertFalse(revisedRuleTestHighestOut.contains("- "));
+        assertTrue(revisedRuleTestHighestOut.contains("Total Weight: 0.0 kg / 0.0 kg"));
+        assertTrue(revisedRuleTestHighestOut.contains("Total Rating: 0"));
+
+        String testLightestOut = captureOutput(() -> LightestFirst.use(testExperiments, 0.0));
+        assertFalse(testLightestOut.contains("- "));
+        assertTrue(testLightestOut.contains("Total Weight: 0.0 kg / 0.0 kg"));
+        assertTrue(testLightestOut.contains("Total Rating: 0"));
+        
+        String revisedRuleTestLightestOut = captureOutput(() -> LightestFirst.revisedRuleUse(testExperiments, 0.0));
+        assertFalse(revisedRuleTestLightestOut.contains("- "));
+        assertTrue(revisedRuleTestLightestOut.contains("Total Weight: 0.0 kg / 0.0 kg"));
+        assertTrue(revisedRuleTestLightestOut.contains("Total Rating: 0"));
+    }
+	
+	@Test
+    void testNegativeWeightLimitThrowsException() {
+        Experiment[] testExperiment = {
+            new Experiment("6", "Seed Viability", 7.0, 4)
+        };
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> BestRatingtoWeightRatioFirst.use(testExperiment, -50.0));
+        assertTrue(ex.getMessage().toLowerCase().contains("negative"));
+        
+        IllegalArgumentException revisedRuleEx = assertThrows(IllegalArgumentException.class,
+                () -> BestRatingtoWeightRatioFirst.revisedRuleUse(testExperiment, -50.0));
+        assertTrue(revisedRuleEx.getMessage().toLowerCase().contains("negative"));
+    }
+    
+    @Test
+    void testBruteForceEdgeAndNegativeCases() {
+        String zeroOut = captureOutput(() -> BruteForce.use(baseExperiments, 0.0));
+        assertTrue(zeroOut.contains("Valid subsets: 1"));
+        assertTrue(zeroOut.contains("Total Weight: 0.0 kg / 0.0 kg"));
+        assertTrue(zeroOut.contains("Total Rating: 0"));
+
+
+        assertThrows(IllegalArgumentException.class,
+                () -> BruteForce.revisedRuleUse(revisedExperiments, -10.0));
+    }
+	
+	@Test
+    void testMassiveIndividualWeightBypassedSafely() {
+        Experiment massive = new Experiment("99", "Massive Satellite", 800.0, 10);
+        Experiment valid1 = new Experiment("1", "Valid Payload A", 100.0, 1);
+        Experiment valid2 = new Experiment("2", "Valid Payload B", 200.0, 2);
+
+        Experiment[] testExperiments = { massive, valid1, valid2 };
+        double weightLimit = 700.0;
+
+        // BestRatingtoWeightRatioFirst
+        String testRatioFirst = captureOutput(() -> BestRatingtoWeightRatioFirst.use(testExperiments, weightLimit));
+        assertFalse(testRatioFirst.contains("Massive Satellite"), "800 kg item must be bypassed");
+        assertTrue(testRatioFirst.contains("Valid Payload A"));
+        assertTrue(testRatioFirst.contains("Valid Payload B"));
+        assertTrue(testRatioFirst.contains("Total Weight: 300.0 kg / 700.0 kg"));
+        assertTrue(testRatioFirst.contains("Total Rating: 3"));
+        
+        String revisedRuleTestRatioFirst = captureOutput(() -> BestRatingtoWeightRatioFirst.revisedRuleUse(testExperiments, weightLimit));
+        assertFalse(revisedRuleTestRatioFirst.contains("Massive Satellite"), "800 kg item must be bypassed");
+        assertTrue(revisedRuleTestRatioFirst.contains("Valid Payload A"));
+        assertTrue(revisedRuleTestRatioFirst.contains("Valid Payload B"));
+        assertTrue(revisedRuleTestRatioFirst.contains("Total Weight: 300.0 kg / 700.0 kg"));
+        assertTrue(revisedRuleTestRatioFirst.contains("Total Rating: 3"));
+
+        // HighestRatingFirst
+        String testHighestOut = captureOutput(() -> HighestRatingFirst.use(testExperiments, weightLimit));
+        assertFalse(testHighestOut.contains("Massive Satellite"), "800 kg item must be bypassed");
+        assertTrue(testHighestOut.contains("Total Weight: 300.0 kg / 700.0 kg"));
+        assertTrue(testHighestOut.contains("Total Rating: 3"));
+        
+     	String revisedRuleTestHighestOut = captureOutput(() -> HighestRatingFirst.revisedRuleUse(testExperiments, weightLimit));
+        assertFalse(revisedRuleTestHighestOut.contains("Massive Satellite"), "800 kg item must be bypassed");
+        assertTrue(revisedRuleTestHighestOut.contains("Total Weight: 300.0 kg / 700.0 kg"));
+        assertTrue(revisedRuleTestHighestOut.contains("Total Rating: 3"));
+
+       
+        // LightestFirst
+        String testLightestOut = captureOutput(() -> LightestFirst.use(testExperiments, weightLimit));
+        assertFalse(testLightestOut.contains("Massive Satellite"), "800 kg item must be bypassed");
+        assertTrue(testLightestOut.contains("Total Weight: 300.0 kg / 700.0 kg"));
+        assertTrue(testLightestOut.contains("Total Rating: 3"));
+        
+        String revisedRuleTestLightestOut = captureOutput(() -> LightestFirst.revisedRuleUse(testExperiments, weightLimit));
+        assertFalse(revisedRuleTestLightestOut.contains("Massive Satellite"), "800 kg item must be bypassed");
+        assertTrue(revisedRuleTestLightestOut.contains("Total Weight: 300.0 kg / 700.0 kg"));
+        assertTrue(revisedRuleTestLightestOut.contains("Total Rating: 3"));
+        
+    }
+	
+	@Test
+    void testIdenticalRatiosResolvedCleanly() {
+        Experiment testExperiment10kg = new Experiment("1", "10kg", 10.0, 1);
+        Experiment testExperiment20kg = new Experiment("2", "20kg", 20.0, 2);
+
+        Experiment[] testExperiments = { testExperiment10kg, testExperiment20kg };
+
+        // Case A: Capacity fits both (30 kg) -> both selected cleanly, no exceptions or NaN issues
+        String bothFit = captureOutput(() -> BestRatingtoWeightRatioFirst.use(testExperiments, 30.0));
+        assertTrue(bothFit.contains("10kg"));
+        assertTrue(bothFit.contains("20kg"));
+        assertTrue(bothFit.contains("Ratio: 0.1000"));
+        assertTrue(bothFit.contains("Total Weight: 30.0 kg / 30.0 kg"));
+        assertTrue(bothFit.contains("Total Rating: 3"));
+        
+        String revisedRuleBothFit = captureOutput(() -> BestRatingtoWeightRatioFirst.revisedRuleUse(testExperiments, 30.0));
+        assertTrue(revisedRuleBothFit.contains("10kg"));
+        assertTrue(revisedRuleBothFit.contains("20kg"));
+        assertTrue(revisedRuleBothFit.contains("Ratio: 0.1000"));
+        assertTrue(revisedRuleBothFit.contains("Total Weight: 30.0 kg / 30.0 kg"));
+        assertTrue(revisedRuleBothFit.contains("Total Rating: 3"));
+
+        // Case B: Capacity only fits 20 kg -> higher-rating tie-breaker selects 20kg (Rating 2) over 10kg (Rating 1)
+        String tightFit = captureOutput(() -> BestRatingtoWeightRatioFirst.use(testExperiments, 20.0));
+        assertTrue(tightFit.contains("20kg"), "Higher-rating tie-breaker selects 20kg (Rating 2) first");
+        assertFalse(tightFit.contains("10kg"), "10kg exceeds remaining 0 kg capacity");
+        assertTrue(tightFit.contains("Total Weight: 20.0 kg / 20.0 kg"));
+        assertTrue(tightFit.contains("Total Rating: 2"));
+        
+        String revisedRuleTightFit = captureOutput(() -> BestRatingtoWeightRatioFirst.revisedRuleUse(testExperiments, 20.0));
+        assertTrue(revisedRuleTightFit.contains("20kg"), "Higher-rating tie-breaker selects 20kg (Rating 2) first");
+        assertFalse(revisedRuleTightFit.contains("10kg"), "10kg exceeds remaining 0 kg capacity");
+        assertTrue(revisedRuleTightFit.contains("Total Weight: 20.0 kg / 20.0 kg"));
+        assertTrue(revisedRuleTightFit.contains("Total Rating: 2"));
+    }
+
+	//negative tests
+	
+	@Test
+    void testExperimentRejectsNullOrBlankOrder() {
+        IllegalArgumentException nullTestExperiment = assertThrows(IllegalArgumentException.class,
+                () -> new Experiment(null, "Cloud Patterns", 36.0, 5));
+        assertTrue(nullTestExperiment.getMessage().toLowerCase().contains("order"),
+                "Error message should clearly mention 'order'");
+
+        IllegalArgumentException blankTestExperiment = assertThrows(IllegalArgumentException.class,
+                () -> new Experiment("   ", "Cloud Patterns", 36.0, 5));
+        assertTrue(blankTestExperiment.getMessage().toLowerCase().contains("order"));
+    }
+	
+	@Test
+    void testExperimentRejectsNullOrBlankName() {
+        IllegalArgumentException nullTestExperiment = assertThrows(IllegalArgumentException.class,
+                () -> new Experiment("1", null, 36.0, 5));
+        assertTrue(nullTestExperiment.getMessage().toLowerCase().contains("name"),
+                "Error message should clearly mention 'name'");
+
+        IllegalArgumentException blankTestExperiment = assertThrows(IllegalArgumentException.class,
+                () -> new Experiment("1", "", 36.0, 5));
+        assertTrue(blankTestExperiment.getMessage().toLowerCase().contains("name"));
+    }
+	
+	@Test
+    void testExperimentRejectsZeroOrNegativeWeight() {
+        IllegalArgumentException zeroTestExperiment = assertThrows(IllegalArgumentException.class,
+                () -> new Experiment("1", "Zero Weight", 0.0, 5));
+        assertTrue(zeroTestExperiment.getMessage().toLowerCase().contains("weight"),
+                "Error message should clearly mention 'weight'");
+
+        IllegalArgumentException negTestExperiment = assertThrows(IllegalArgumentException.class,
+                () -> new Experiment("1", "Negative Weight", -12.5, 5));
+        assertTrue(negTestExperiment.getMessage().toLowerCase().contains("weight"));
+    }
+	
+	@Test
+    void testExperimentRejectsNegativeRating() {
+        IllegalArgumentException negRatingTestExperiment = assertThrows(IllegalArgumentException.class,
+                () -> new Experiment("1", "Negative Rating", 36.0, -1));
+        assertTrue(negRatingTestExperiment.getMessage().toLowerCase().contains("rating"),
+                "Error message should clearly mention 'rating'");
+    }
+	
+	@Test
+    void testExperimentSettersRejectInvalidValues() {
+        Experiment validTestExperiment = new Experiment("1", "Cloud Patterns", 36.0, 5);
+
+        assertThrows(IllegalArgumentException.class, () -> validTestExperiment.setWeightKg(0.0));
+        assertThrows(IllegalArgumentException.class, () -> validTestExperiment.setWeightKg(-5.0));
+        assertThrows(IllegalArgumentException.class, () -> validTestExperiment.setRating(-3));
+        assertThrows(IllegalArgumentException.class, () -> validTestExperiment.setOrder(""));
+        assertThrows(IllegalArgumentException.class, () -> validTestExperiment.setExperimentName(null));
+    }
+	
+	@Test
+    void testGreedyStrategiesRejectNullExperimentArray() {
+        IllegalArgumentException ratioTestExperiment = assertThrows(IllegalArgumentException.class,
+                () -> BestRatingtoWeightRatioFirst.use(null, 700.0));              
+        assertTrue(ratioTestExperiment.getMessage().toLowerCase().contains("null"),
+                "Error message should clearly state experiments array cannot be null");
+        
+        IllegalArgumentException revisedRuleRatioTestExperiment = assertThrows(IllegalArgumentException.class,
+                () -> BestRatingtoWeightRatioFirst.revisedRuleUse(null, 700.0));
+        assertTrue(revisedRuleRatioTestExperiment.getMessage().toLowerCase().contains("null"),
+                "Error message should clearly state experiments array cannot be null");
+        
+
+        assertThrows(IllegalArgumentException.class,
+                () -> HighestRatingFirst.use(null, 700.0));
+        assertThrows(IllegalArgumentException.class,
+                () -> HighestRatingFirst.revisedRuleUse(null, 700.0));
+        
+        assertThrows(IllegalArgumentException.class,
+                () -> LightestFirst.use(null, 700.0));
+        assertThrows(IllegalArgumentException.class,
+                () -> LightestFirst.revisedRuleUse(null, 700.0));
+        
+        //assertThrows(IllegalArgumentException.class,
+                //() -> BruteForce.use(null, 700.0));
+    }
+	
+	@Test
+    void testGreedyStrategiesRejectArrayContainingNullElement() {
+        Experiment[] withNullElementTestExperiment = {
+            new Experiment("1", "Cloud Patterns", 36.0, 5),
+            null
+        };
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> BestRatingtoWeightRatioFirst.use(withNullElementTestExperiment, 700.0));
+        assertTrue(ex.getMessage().toLowerCase().contains("null"),
+                "Error message should clearly state array contains a null experiment");
+        
+        IllegalArgumentException RevisedRuleEx = assertThrows(IllegalArgumentException.class,
+                () -> BestRatingtoWeightRatioFirst.revisedRuleUse(withNullElementTestExperiment, 700.0));
+        assertTrue(RevisedRuleEx.getMessage().toLowerCase().contains("null"),
+                "Error message should clearly state array contains a null experiment");
+    }
+	
+	@Test
+    void testGreedyStrategiesNegativeWeightLimit() {
+        Experiment[] validTestExperiment = {
+            new Experiment("1", "Cloud Patterns", 36.0, 5)
+        };
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> BestRatingtoWeightRatioFirst.use(validTestExperiment, -100.0));
+        assertTrue(ex.getMessage().toLowerCase().contains("weight limit"),
+                "Error message should clearly mention 'weight limit'");
+
+        IllegalArgumentException rulesEx = assertThrows(IllegalArgumentException.class,
+                () -> new RevisedRules(-10.0));
+        assertTrue(rulesEx.getMessage().toLowerCase().contains("weight limit"),
+                "Error message should clearly mention 'weight limit'");
+    }
+	
+	// Test cases for after Order Change
+	
+	//"Rule 1: Solar limit - Candidate IDs {2, 3, 7} -> Reject (3 solar experiments)"
+	@Test
+    void testSampleManifestSolarLimitReject() {
+        RevisedRules rules = new RevisedRules(700.0);
+
+        Experiment testExperiment2 = new Experiment("2", "Solar Flares", 264, 9);
+        Experiment testExperiment3 = new Experiment("3", "Solar Power", 188, 6);
+        Experiment testExperiment7 = new Experiment("7", "Sun Spots", 90, 2);
+
+        assertTrue(rules.revisedUse(testExperiment2), "Solar #2 should be accepted");
+        assertTrue(rules.revisedUse(testExperiment3), "Solar #3 should be accepted");
+        assertFalse(rules.revisedUse(testExperiment7), "Solar #7 must be rejected (exceeds 2 solar limit)");
+
+        assertEquals(2, rules.getChosenExperiments().size());
+        assertEquals(452.0, rules.getCurrentWeightKg(), 0.001);
+    }
+	
+	// Rule 2: 11a prerequisite - Candidate IDs {11a} -> Reject (Experiment 11 absent)
+	@Test
+    void testSampleManifest11aPrerequisiteReject() {
+        RevisedRules rules = new RevisedRules(700.0);
+
+        Experiment testExperiment11a = new Experiment("11a", "Cosmic Rays", 10, 5);
+
+        assertFalse(rules.revisedUse(testExperiment11a), "11a must be rejected when Experiment 11 is absent");
+        assertTrue(rules.getChosenExperiments().isEmpty());
+        assertEquals(0.0, rules.getCurrentWeightKg(), 0.001);
+        assertEquals(0, rules.getTotalRating());
+    }
+	
+	@Test
+    void testExperiment11aPrerequisiteBehavior() {
+        RevisedRules rules = new RevisedRules(200.0);
+
+        assertFalse(rules.revisedUse(new Experiment("11a", "Cosmic Rays", 10, 5)));
+        assertEquals(0, rules.getChosenExperiments().size());
+
+        assertTrue(rules.revisedUse(new Experiment("11", "Cosmic Rays", 80, 7)));
+        List<Experiment> chosen = rules.getChosenExperiments();
+        assertEquals(2, chosen.size());
+        assertEquals("11", chosen.get(0).getOrder());
+        assertEquals("11a", chosen.get(1).getOrder());
+        assertEquals(90.0, rules.getCurrentWeightKg(), 0.001);
+        assertEquals(12, rules.getTotalRating());
+    }
+	
+	// Rule 3: Thermal mass credit - Candidate IDs {1, 2, 4, 6, 10, 12} -> Accept (707 kg -> 700 kg
+	@Test
+    void testSampleManifestThermalMassCreditAccept() {
+        RevisedRules rules = new RevisedRules(700.0);
+
+        Experiment[] testRevisedExperiments = {
+            new Experiment("1", "Cloud Patterns", 36, 5),
+            new Experiment("2", "Solar Flares", 264, 9),
+            new Experiment("4", "Binary Stars", 203, 8),
+            new Experiment("6", "Seed Viability", 7, 4),
+            new Experiment("10", "Micrometeorites", 170, 9),
+            new Experiment("12", "Yeast Fermentation", 27, 4)
+        };
+
+        for (Experiment exp : testRevisedExperiments) {
+            assertTrue(rules.revisedUse(exp),
+                    "Experiment " + exp.getOrder() + " should be accepted in manifest {1, 2, 4, 6, 10, 12}");
+        }
+
+        assertEquals(6, rules.getChosenExperiments().size());
+        assertTrue(rules.isThermalCreditApplied(), "7.0 kg thermal credit must be applied");
+        assertEquals(700.0, rules.getCurrentWeightKg(), 0.001, "Total mass must drop from 707 kg to 700 kg");
+        assertEquals(39, rules.getTotalRating()); // 5 + 9 + 8 + 4 + 9 + 4 = 39
+    }
+	
+	// BruteForce: All 3 rules 
+	@Test
+    void testBruteForceRevisedRulesConstraintEnforcement() {
+        Experiment[] constrainedSet = {
+            new Experiment("2", "Solar Flares", 264, 9),
+            new Experiment("3", "Solar Power", 188, 6),
+            new Experiment("7", "Sun Spots", 90, 2),
+            new Experiment("11a", "Cosmic Rays", 10, 5)
+        };
+
+        String output = captureOutput(() -> BruteForce.revisedRuleUse(constrainedSet, 700.0));
+        String rank1Block = output.substring(output.indexOf("Rank 1 - OPTIMAL"), output.indexOf("Rank 2"));
+
+        assertTrue(rank1Block.contains("Solar Flares"));
+        assertTrue(rank1Block.contains("Solar Power"));
+        assertFalse(rank1Block.contains("Sun Spots"), "3rd solar instrument must be rejected");
+        assertFalse(rank1Block.contains("Cosmic Rays"), "11a must be rejected when 11 is absent");
+        assertTrue(rank1Block.contains("Total Weight: 452.0 kg / 700.0 kg"));
+        assertTrue(rank1Block.contains("Total Rating: 15"));
+    }
+	
+}
