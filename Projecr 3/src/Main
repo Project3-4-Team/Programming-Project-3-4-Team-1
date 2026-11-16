@@ -77,8 +77,29 @@ public class Main {
 		//System.out.println("\n------------------------------------------------");
 		//BruteForce.use(experiments, weightLimit);
 		///System.out.println("\n------------------------------------------------");
-		
-		
+
+       // Part 4 - Dynamic Programming (pseudocode)
+       // 
+       // instead of checking every single subset like brute force,
+       // this DP approach will create smaller versions of the actual problem
+	   // and save the answers in a table so they can be reused instead of doing
+       // the calculation all over again.
+       //
+       // table[itemNum][space] = the best rating using the first itemNum (experiments) with the space kg of room.
+       // 
+       // for each experiment itemNum (1 to n): 
+       //     for each space (0 to 700):
+       //         skip: table[itemNum][space] = table[itemNum - 1][space]
+       //         if experiment itemNum fits in space:
+       //                 take itemNum: rating[itemNum] + table[itemNum - 1][space - weight[itemNum]]
+       //                 keep the highest
+       //
+       // best answer = table[n][700]  (matches brute force with 53)
+       //
+       // brute force doubles the work with every new experiment but DP only adds
+       // one more row, this makes it stay fast on bigger problems while still getting the best possible result.
+
+
 		// Project 3: Change Order
 		
 		// Revised Experiments 
